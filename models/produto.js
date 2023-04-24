@@ -16,6 +16,10 @@ const Produto = model(
             type: Number,
             required: true,
         },
+        preco: {
+            type: Number,
+            required: true,
+        },
         desconto: {
             type: Number,
             required: false,
