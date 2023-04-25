@@ -33,7 +33,9 @@ const Produto = model(
             type: String,
             required: true,
         },
-        
+        imagem: {
+            type: String
+        }
     })
 );
 
@@ -45,6 +47,7 @@ const produtoJoi = Joi.object({
     desconto: Joi.number().required().messages({"any.required": "O campo 'desconto' é obrigatório."}),
     dataDesconto: Joi.date().required().messages({"any.required": "A data de desconto é obrigatória."}),
     categoria: Joi.string().required().messages({"any.required": "O campo 'categoria' é obrigatório."}),
+    imagem: Joi.string()
 });
 
 module.exports = { Produto, produtoJoi };
