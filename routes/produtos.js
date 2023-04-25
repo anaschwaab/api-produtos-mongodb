@@ -1,33 +1,40 @@
 const { Router } = require("express");
-const Produto = require("../models/produto");
+const { Produto, produtoJoi } = require("../models/produto");
 
 const router = Router();
 
 // Inserção de Produto (POST)
 router.post("/produtos", async (req, res) => {
   try {
-    const {
-      nome,
-      descricao,
-      quantidade,
-      preco,
-      desconto,
-      dataDesconto,
-      categoria,
-    } = req.body;
+    const { error } = produtoJoi.validate(req.body);
 
-    const produto = new Produto({
-      nome,
-      descricao,
-      quantidade,
-      preco,
-      desconto,
-      dataDesconto,
-      categoria,
-    });
-
-    await produto.save();
-    res.status(201).json(produto);
+    if(error) {
+      res.status(400).json({ message: error.details[0].message});
+    }else{
+      const {
+        nome,
+        descricao,
+        quantidade,
+        preco,
+        desconto,
+        dataDesconto,
+        categoria,
+      } = req.body;
+  
+      const produto = new Produto({
+        nome,
+        descricao,
+        quantidade,
+        preco,
+        desconto,
+        dataDesconto,
+        categoria,
+      });
+  
+      await produto.save();
+      res.status(201).json(produto);
+    }
+    
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Um erro aconteceu." });
@@ -45,43 +52,25 @@ router.get("/produtos/filtro", async (req, res) => {
 
   try{
     const { nome, quantidade, preco, categoria } = req.query;
-    const produtosNome = await Produto.find().where("nome").equals(nome);
-    const produtosQuantidade = await Produto.find().where("quantidade").equals(quantidade);
-    const produtosPreco = await Produto.find().where("preco").equals(preco);
-    const produtosCategoria = await Produto.find().where("categoria").equals(categoria);
-  
-    if (nome){
-      res.json(produtosNome);
-    }else if (quantidade){
-      res.json(produtosQuantidade);
-    }else if (preco){
-      res.json(produtosPreco);
-    }else if (categoria){
-      res.json(produtosCategoria);
-    }else{
-      res.status(404).json({ message: "Parâmetro de pesquisa inválido."})
+
+    const query = {};
+    if (nome) query.nome = nome;
+    if (quantidade) query.quantidade = quantidade;
+    if (preco) query.preco = preco;
+    if (categoria) query.categoria = categoria;
+
+    const produtos = await Produto.find(query);
+
+    if (produtos.length === 0) {
+      res.status(404).json({ message: "Nenhum produto encontrado." });
+    } else {
+      res.json(produtos);
     }
   }catch(err){
     console.log(err);
     res.status(500).json({ message: "Um erro aconteceu." });
   }
 });
-
-
-// Listagem de Produtos de acordo com a categoria 'brinquedo'
-// router.get("/produtos/brinquedos", async (req, res) => {
-//   try{
-//     const listaBrinquedos = await Produto.find().where("categoria").equals("brinquedo");
-//     if(listaBrinquedos.length > 0){
-//       res.json(listaBrinquedos);
-//     }else{
-//       res.status(404).json({ message: "Nenhum produto nessa categoria foi encontrado."});
-//     }
-//   }catch(err){
-//     console.log(err);
-//     res.status(500).json({ message: "Um erro aconteceu." });
-//   }
-// });
 
 
 // Listagem de um Produto (GET)
@@ -106,6 +95,11 @@ router.get("/produtos/:id", async (req, res) => {
 // Atualização de um Produto (PUT)
 router.put("/produtos/:id", async (req, res) => {
   try {
+    const { error } = produtoJoi.validate(req.body);
+
+    if(error) {
+      res.status(400).json({ message: error.details[0].message});
+    }else{
     const { id } = req.params;
     const {
       nome,
@@ -132,6 +126,7 @@ router.put("/produtos/:id", async (req, res) => {
     } else {
       res.status(404).json({ message: "Produto não encontrado." });
     }
+  }
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: "Um erro aconteceu." });
