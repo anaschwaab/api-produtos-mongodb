@@ -335,7 +335,7 @@ router.get("/produtos/:id", async (req, res) => {
  */
 
 // Atualização de um Produto (PUT)
-router.put("/produtos/:id", async (req, res) => {
+router.put("/produtos/:id", upload.single("imagem"), async (req, res) => {
   try {
     const { error } = produtoJoi.validate(req.body);
     const {
@@ -352,7 +352,7 @@ router.put("/produtos/:id", async (req, res) => {
       res.status(400).json({ message: error.details[0].message});
     }else{
     const { id } = req.params;
-    
+    console.log(req.file)
     const produto = await Produto.findByIdAndUpdate(id, {
       nome,
       descricao,
@@ -361,6 +361,7 @@ router.put("/produtos/:id", async (req, res) => {
       desconto,
       dataDesconto,
       categoria,
+      imagem: req.file?.path
     }, { new: true });
 
     const descontoValido = Joi.date().greater('now').validate(dataDesconto);
